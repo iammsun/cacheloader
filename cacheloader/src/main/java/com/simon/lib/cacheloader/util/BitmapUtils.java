@@ -1,8 +1,3 @@
-/**
- * @author mengsun
- * @date 2015-11-17 17:00:54
- */
-
 package com.simon.lib.cacheloader.util;
 
 import android.app.Activity;
@@ -27,6 +22,10 @@ import android.provider.MediaStore;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
+/**
+ * @author mengsun
+ * @date 2015-11-17 17:00:54
+ */
 public class BitmapUtils {
 
     public static final int MAXMIMUM_BITMAP_SIZE = 2048;
@@ -287,24 +286,31 @@ public class BitmapUtils {
         return result;
     }
 
-    public static Bitmap crop(Bitmap bitmap, float width, float height) {
+    public static Bitmap crop(Bitmap bitmap, float targetW, float targetH) {
         if (bitmap == null) {
             return null;
         }
         int w = bitmap.getWidth();
         int h = bitmap.getHeight();
-        float scale1 = width / height;
+        int cropW, cropH;
+        float scale1 = targetW / targetH;
         float scale2 = (float) w / h;
         if (scale1 < scale2) {
-            width = (int) (h * scale1);
-            height = h;
+            cropW = (int) (h * scale1);
+            cropH = h;
         } else {
-            width = w;
-            height = (int) (w / scale1);
+            cropW = w;
+            cropH = (int) (w / scale1);
         }
-        int retX = (int) (width > w ? 0 : (w - width) / 2);
-        int retY = (int) (height > h ? 0 : (h - height) / 2);
-        return Bitmap.createBitmap(bitmap, retX, retY, (int) width, (int) height, null, false);
+        int retX = (int) (cropW > w ? 0 : (w - cropW) / 2);
+        int retY = (int) (cropH > h ? 0 : (h - cropH) / 2);
+        Bitmap crop = Bitmap.createBitmap(bitmap, retX, retY, (int) cropW, (int) cropH, null,
+                false);
+        Bitmap scale = scale(crop, targetW / cropW);
+        if (scale != crop && crop != null && crop != bitmap) {
+            crop.recycle();
+        }
+        return scale;
     }
 
     public static Bitmap scale(Bitmap bitmap, float scale) {

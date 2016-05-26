@@ -154,10 +154,15 @@ public class GalleryActivity extends AppCompatActivity {
                     Toast.makeText(getContext(), android.R.string.cancel, Toast.LENGTH_LONG).show();
                 }
             };
-
-            DownLoadManager.getInstance().load("http://a4.att.hudong" +
-                    ".com/73/66/20200000013920144740665554724_140.jpg", new ImageLoader
-                    .ImageLoaderOption().width(10).height(10).cornerRate(1), callback);
+            DownLoadManager.getInstance().load("http://image.baidu" +
+                    ".com/search/down?tn=download&word=download&ie=utf8&fr=detail&url=http%3A%2F" +
+                    "%2Fphoto.enterdesk.com%2F2011-2-16%2Fenterdesk" +
+                    ".com-1AA0C93EFFA51E6D7EFE1AE7B671951F.jpg&thumburl=http%3A%2F%2Fimg4.imgtn" +
+                    ".bdimg.com%2Fit%2Fu%3D819265564%2C3078214620%26fm%3D21%26gp%3D0.jpg", new
+                    ImageLoader
+                            .ImageLoaderOption().width(getArguments().getInt(ARG_SECTION_NUMBER)
+                    * 10).height(getArguments().getInt(ARG_SECTION_NUMBER) * 10).cornerRate(1),
+                    callback);
         }
     }
 

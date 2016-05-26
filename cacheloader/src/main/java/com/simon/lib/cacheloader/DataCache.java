@@ -12,7 +12,8 @@ import com.simon.lib.cacheloader.util.Utils;
 import java.io.File;
 
 /**
- * Created by sunmeng on 16/5/26.
+ * @author mengsun
+ * @date 2016-5-26 21:48:57
  */
 class DataCache implements ICache<byte[]> {
 
@@ -38,7 +39,7 @@ class DataCache implements ICache<byte[]> {
             Log.d(TAG, "data is null, failed to cache");
             return false;
         }
-        String filePath = Utils.getHttpCacheDir(mContext) + java.util.UUID.randomUUID();
+        String filePath = Utils.getCacheDir(mContext) + java.util.UUID.randomUUID();
         if (!IOUtils.write(data, filePath)) {
             Log.d(TAG, "failed cache, write to file: " + filePath);
             return false;
@@ -128,12 +129,12 @@ class DataCache implements ICache<byte[]> {
     @Override
     public void clear() {
         mContentHelper.getWritableDatabase().delete(TABLE_CACHE, null, null);
-        IOUtils.delete(Utils.getHttpCacheDir(mContext));
+        IOUtils.delete(Utils.getCacheDir(mContext));
     }
 
     @Override
     public long size() {
-        File root = new File(Utils.getHttpCacheDir(mContext));
+        File root = new File(Utils.getCacheDir(mContext));
         return IOUtils.getLength(root);
     }
 }

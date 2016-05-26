@@ -6,7 +6,8 @@ import com.simon.lib.cacheloader.util.BitmapUtils;
 import com.simon.lib.cacheloader.util.Utils;
 
 /**
- * Created by sunmeng on 16/5/26.
+ * @author mengsun
+ * @date 2016-5-26 21:48:57
  */
 public class ImageLoader extends DownLoader {
 

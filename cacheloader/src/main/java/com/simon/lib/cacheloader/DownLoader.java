@@ -1,12 +1,12 @@
 package com.simon.lib.cacheloader;
 
-import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 import com.simon.lib.cacheloader.util.IOUtils;
 
 /**
- * Created by sunmeng on 16/5/24.
+ * @author mengsun
+ * @date 2016-5-26 21:48:57
  */
 class DownLoader implements Runnable {
 
@@ -40,10 +40,6 @@ class DownLoader implements Runnable {
             }
         }
         onLoadComplete(data, ex);
-    }
-
-    String getUrl() {
-        return mUrl;
     }
 
     void onLoadComplete(byte[] data, Throwable ex) {

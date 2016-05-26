@@ -1,8 +1,3 @@
-/**
- * @author mengsun
- * @date 2015-11-17 17:00:34
- */
-
 package com.simon.lib.cacheloader.util;
 
 import java.io.File;
@@ -15,6 +10,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.zip.CRC32;
 
+/**
+ * @author mengsun
+ * @date 2015-11-17 17:00:34
+ */
 public class IOUtils {
 
     public static final long UNIT = 1024;

@@ -1,7 +1,8 @@
 package com.simon.lib.cacheloader;
 
 /**
- * Created by sunmeng on 16/5/24.
+ * @author mengsun
+ * @date 2016-5-26 21:48:57
  */
 public interface Callback<T> {
 

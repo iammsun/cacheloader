@@ -6,7 +6,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
 /**
- * Created by sunmeng on 16/5/26.
+ * @author mengsun
+ * @date 2016-5-26 21:48:57
  */
 class ContentHelper extends SQLiteOpenHelper {
 
