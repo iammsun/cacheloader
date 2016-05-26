@@ -29,34 +29,4 @@ public class MainActivityFragment extends Fragment {
         imageView = (ImageView) root.findViewById(R.id.icon);
         return root;
     }
-
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        loadImage();
-    }
-
-    private void loadImage() {
-        Callback callback = new Callback() {
-            @Override
-            public void onResult(byte[] data) {
-                imageView.setImageBitmap(BitmapUtils.decodeBitmap(data));
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onCancel(int code) {
-                Toast.makeText(getContext(), android.R.string.cancel, Toast.LENGTH_LONG).show();
-            }
-        };
-        DownLoadManager.init(getContext(), DownLoadManager.FLAG_CACHE_AFTER_LOAD |
-                DownLoadManager.FLAG_LOAD_FROM_CACHE);
-        DownLoadManager.getInstance().load("http://a4.att.hudong" +
-                ".com/73/66/20200000013920144740665554724_140.jpg", callback);
-    }
 }

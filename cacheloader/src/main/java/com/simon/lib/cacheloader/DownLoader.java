@@ -1,5 +1,6 @@
 package com.simon.lib.cacheloader;
 
+import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 import com.simon.lib.cacheloader.util.IOUtils;
@@ -7,17 +8,15 @@ import com.simon.lib.cacheloader.util.IOUtils;
 /**
  * Created by sunmeng on 16/5/24.
  */
-public abstract class DownLoader implements Runnable {
+class DownLoader implements Runnable {
 
-    private final String mUrl;
-    private final boolean mWithCache;
-    private final boolean mCache;
-    boolean loop;
+    protected final DownLoadManager mDownLoadManager = DownLoadManager.getInstance();
+    protected final String mUrl;
+    protected int mFlags;
 
-    DownLoader(String url, boolean withCache, boolean cache) {
+    DownLoader(String url, int flags) {
         mUrl = url;
-        mWithCache = withCache;
-        mCache = cache;
+        mFlags = flags;
         if (TextUtils.isEmpty(mUrl)) {
             throw new IllegalArgumentException("url is null");
         }
@@ -27,8 +26,8 @@ public abstract class DownLoader implements Runnable {
     public void run() {
         Throwable ex = null;
         byte[] data = null;
-        if (mWithCache) {
-            data = Cache.loadCache(mUrl);
+        if (mDownLoadManager.isLoadCache(mFlags)) {
+            data = mDownLoadManager.getCache().get(mUrl);
         }
         if (data == null) {
             try {
@@ -36,16 +35,18 @@ public abstract class DownLoader implements Runnable {
             } catch (Exception e) {
                 ex = e;
             }
-            if (data != null && mCache) {
-                Cache.cache(mUrl, data);
+            if (data != null && mDownLoadManager.isCache(mFlags)) {
+                mDownLoadManager.getCache().cache(mUrl, data);
             }
         }
         onLoadComplete(data, ex);
     }
 
-    public String getUrl() {
+    String getUrl() {
         return mUrl;
     }
 
-    abstract void onLoadComplete(byte[] data, Throwable ex);
+    void onLoadComplete(byte[] data, Throwable ex) {
+
+    }
 }

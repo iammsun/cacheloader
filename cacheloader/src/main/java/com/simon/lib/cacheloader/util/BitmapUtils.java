@@ -129,13 +129,13 @@ public class BitmapUtils {
         }
     }
 
-    public static Bitmap roundCorner(Bitmap bitmap, float roundRate) {
-        if (roundRate == 0 || bitmap == null) {
+    public static Bitmap roundCorner(Bitmap bitmap, float cornerRate) {
+        if (cornerRate == 0 || bitmap == null) {
             return bitmap;
         }
-        if (roundRate < 0 || roundRate > 1) {
+        if (cornerRate < 0 || cornerRate > 1) {
             throw new IllegalArgumentException(
-                    "rate should be [0, 1] and the value is " + roundRate);
+                    "rate should be [0, 1] and the value is " + cornerRate);
         }
         try {
             int width = bitmap.getWidth();
@@ -149,8 +149,8 @@ public class BitmapUtils {
             paint.setAntiAlias(true);
             canvas.drawARGB(0, 0, 0, 0);
             paint.setColor(color);
-            canvas.drawRoundRect(rectF, (float) width / 2 * roundRate,
-                    (float) height / 2 * roundRate, paint);
+            canvas.drawRoundRect(rectF, (float) width / 2 * cornerRate,
+                    (float) height / 2 * cornerRate, paint);
             paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
             canvas.drawBitmap(bitmap, rect, rect, paint);
             canvas.save(Canvas.ALL_SAVE_FLAG);
@@ -207,11 +207,11 @@ public class BitmapUtils {
     }
 
     public static Bitmap decodeCroppedRoundBitmap(byte[] data, float width, float height,
-            float roundPx) {
+            float cornerRate) {
         Bitmap temp = decodeCroppedBitmap(data, width, height);
         Bitmap result = temp;
-        if (temp != null && roundPx != 0) {
-            result = roundCorner(temp, roundPx);
+        if (temp != null && cornerRate != 0) {
+            result = roundCorner(temp, cornerRate);
             if (result != temp && temp != null) {
                 temp.recycle();
             }
