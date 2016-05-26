@@ -54,7 +54,8 @@ public class MainActivityFragment extends Fragment {
                 Toast.makeText(getContext(), android.R.string.cancel, Toast.LENGTH_LONG).show();
             }
         };
-        DownLoadManager.init(getContext(), 0);
+        DownLoadManager.init(getContext(), DownLoadManager.FLAG_CACHE_AFTER_LOAD |
+                DownLoadManager.FLAG_LOAD_FROM_CACHE);
         DownLoadManager.getInstance().load("http://a4.att.hudong" +
                 ".com/73/66/20200000013920144740665554724_140.jpg", callback);
     }
