@@ -304,8 +304,12 @@ public class BitmapUtils {
         }
         int retX = (int) (cropW > w ? 0 : (w - cropW) / 2);
         int retY = (int) (cropH > h ? 0 : (h - cropH) / 2);
-        Bitmap crop = Bitmap.createBitmap(bitmap, retX, retY, (int) cropW, (int) cropH, null,
-                false);
+        Bitmap crop;
+        try {
+            crop = Bitmap.createBitmap(bitmap, retX, retY, (int) cropW, (int) cropH, null, false);
+        }catch (OutOfMemoryError e){
+            return null;
+        }
         Bitmap scale = scale(crop, targetW / cropW);
         if (scale != crop && crop != null && crop != bitmap) {
             crop.recycle();

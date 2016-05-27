@@ -5,28 +5,24 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.Toast;
-
-import com.simon.lib.cacheloader.Callback;
-import com.simon.lib.cacheloader.DownLoadManager;
-import com.simon.lib.cacheloader.util.BitmapUtils;
+import android.widget.ListView;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
 
+    private ListView listView;
+
     public MainActivityFragment() {
     }
-
-    private ImageView imageView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_main, container, false);
-        imageView = (ImageView) root.findViewById(R.id.icon);
+        View root =  inflater.inflate(R.layout.fragment_main, container, false);
+        listView = (ListView)root.findViewById(R.id.list);
+        listView.setAdapter(new ImageListAdapter(getContext()));
         return root;
     }
 }

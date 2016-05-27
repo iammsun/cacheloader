@@ -9,9 +9,10 @@
                 tools:context="com.simon.lib.cacheloader.sample.MainActivityFragment"
                 tools:showIn="@layout/activity_main">
 
-    <ImageView
-        android:id="@+id/icon"
+    <ListView
+        android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content">
+    </ListView>
 
 </RelativeLayout>

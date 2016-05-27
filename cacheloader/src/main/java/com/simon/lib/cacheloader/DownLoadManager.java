@@ -63,7 +63,7 @@ public class DownLoadManager {
 
     public static final int FLAG_CACHE_AFTER_LOAD = FLAG_LOAD_BASE << 1;
 
-    private static final int POOL_SIZE = 5;
+    private static final int POOL_SIZE = 10;
     private final ExecutorService mExecutorService;
 
     private final List<DownLoader> mLoaders = new ArrayList<>();
