@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.GridView;
 import android.widget.ListView;
 
 /**
@@ -12,7 +13,7 @@ import android.widget.ListView;
  */
 public class MainActivityFragment extends Fragment {
 
-    private ListView listView;
+    private GridView listView;
 
     public MainActivityFragment() {
     }
@@ -21,7 +22,7 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View root =  inflater.inflate(R.layout.fragment_main, container, false);
-        listView = (ListView)root.findViewById(R.id.list);
+        listView = (GridView)root.findViewById(R.id.list);
         listView.setAdapter(new ImageListAdapter(getContext()));
         return root;
     }

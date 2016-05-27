@@ -72,16 +72,17 @@ public class DownLoadManager {
 
     private Handler mUIHandler;
     private ICache<byte[]> mCache;
+    private ICache<Bitmap> mMemCache;
     private int mFlags;
-    private long mCacheSize;
 
     private DownLoadManager(Context context, Configuration config) {
         mUIHandler = new Handler(Looper.getMainLooper());
         ContentHelper contentHelper = new ContentHelper(context);
         mCache = new DataCache(context, contentHelper);
+        mMemCache = new BitmapCache(config == null || config.cacheSize <=0 ? Runtime.getRuntime()
+                .maxMemory() / 3 : config.cacheSize);
         if (config != null) {
             mFlags = config.flags;
-            mCacheSize = config.cacheSize;
         }
         mExecutorService = Executors.newFixedThreadPool(config == null || config.threadPoolSize
                 <= 0 ? POOL_SIZE : config.threadPoolSize);
@@ -97,6 +98,10 @@ public class DownLoadManager {
 
     public ICache<byte[]> getCache() {
         return mCache;
+    }
+
+    public ICache<Bitmap> getMemCache() {
+        return mMemCache;
     }
 
     public void load(final String url, final Callback<byte[]> callback) {

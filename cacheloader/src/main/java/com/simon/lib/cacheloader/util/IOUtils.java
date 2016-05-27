@@ -16,7 +16,7 @@ import java.util.zip.CRC32;
  */
 public class IOUtils {
 
-    public static final long UNIT = 1024;
+    public static final int UNIT = 1024;
 
     public static byte[] read(InputStream is) throws IOException {
         byte[] data = null;

@@ -39,12 +39,20 @@ public class ImageLoader extends DownLoader {
         mOption = option;
     }
 
+    private String getCacheKey() {
+        return Utils.getBitmapCacheKey(mUrl, mOption.width, mOption.height, mOption.cornerRate);
+    }
+
     @Override
     public void run() {
         byte[] data = null;
         if (mDownLoadManager.isLoadCache(mFlags)) {
-            data = mDownLoadManager.getCache().get(Utils.getBitmapCacheKey(mUrl, mOption.width,
-                    mOption.height, mOption.cornerRate));
+            Bitmap bitmap = mDownLoadManager.getMemCache().get(getCacheKey());
+            if (bitmap != null) {
+                onLoadComplete(bitmap, null);
+                return;
+            }
+            data = mDownLoadManager.getCache().get(getCacheKey());
         }
         if (data == null) {
             super.run();
@@ -61,8 +69,8 @@ public class ImageLoader extends DownLoader {
                     mOption.cornerRate);
         }
         if (bitmap != null && mDownLoadManager.isCache(mFlags)) {
-            mDownLoadManager.getCache().cache(Utils.getBitmapCacheKey(mUrl, mOption.width,
-                    mOption.height, mOption.cornerRate), BitmapUtils.decodeBytes(bitmap));
+            mDownLoadManager.getCache().cache(getCacheKey(), BitmapUtils.decodeBytes(bitmap));
+            mDownLoadManager.getMemCache().cache(getCacheKey(), bitmap);
         }
         onLoadComplete(bitmap, ex);
     }
