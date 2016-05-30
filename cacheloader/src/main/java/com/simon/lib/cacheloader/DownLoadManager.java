@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 
+import java.io.InterruptedIOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -79,7 +80,7 @@ public class DownLoadManager {
         mUIHandler = new Handler(Looper.getMainLooper());
         ContentHelper contentHelper = new ContentHelper(context);
         mCache = new DataCache(context, contentHelper);
-        mMemCache = new BitmapCache(config == null || config.cacheSize <=0 ? Runtime.getRuntime()
+        mMemCache = new BitmapCache(config == null || config.cacheSize <= 0 ? Runtime.getRuntime()
                 .maxMemory() / 3 : config.cacheSize);
         if (config != null) {
             mFlags = config.flags;
@@ -184,6 +185,9 @@ public class DownLoadManager {
         mUIHandler.post(new Runnable() {
             @Override
             public void run() {
+                if (mFutures.get(loader) != null && ex instanceof InterruptedIOException) {
+                    return;
+                }
                 if (mFutures.get(loader) == null) {
                     return;
                 }

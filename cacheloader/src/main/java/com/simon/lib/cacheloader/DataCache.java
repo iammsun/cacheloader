@@ -40,7 +40,9 @@ class DataCache implements ICache<byte[]> {
             return false;
         }
         String filePath = Utils.getCacheDir(mContext) + java.util.UUID.randomUUID();
-        if (!IOUtils.write(data, filePath)) {
+        try {
+            IOUtils.write(data, filePath);
+        } catch (Exception e) {
             Log.d(TAG, "failed cache, write to file: " + filePath);
             return false;
         }

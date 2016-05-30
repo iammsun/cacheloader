@@ -21,7 +21,7 @@ public class IOUtils {
     public static byte[] read(InputStream is) throws IOException {
         byte[] data = null;
         byte[] buffer = new byte[4 * 1024 * 1024];
-        int length = -1;
+        int length;
         int offset = 0;
         while ((length = is.read(buffer, offset, buffer.length - offset)) != -1) {
             if (offset + length >= buffer.length) {
@@ -44,14 +44,11 @@ public class IOUtils {
         return temp;
     }
 
-    public static byte[] read(String filePath) {
+    public static byte[] read(String filePath) throws Exception {
         FileInputStream is = null;
         try {
             is = new FileInputStream(filePath);
             return read(is);
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        } catch (OutOfMemoryError e) {
         } finally {
             if (is != null) {
                 try {
@@ -60,7 +57,6 @@ public class IOUtils {
                 }
             }
         }
-        return null;
     }
 
     public static byte[] readUrl(String httpUrl) throws Exception {
@@ -71,9 +67,7 @@ public class IOUtils {
             conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(5000);
             conn.connect();
-            data = IOUtils.read(conn.getInputStream());
-        } catch (OutOfMemoryError e) {
-            return null;
+            data = read(conn.getInputStream());
         } finally {
             if (conn != null) {
                 conn.disconnect();
@@ -83,14 +77,19 @@ public class IOUtils {
     }
 
     public static byte[] readWithCRC(String filePath, long crc) {
-        byte[] data = read(filePath);
+        byte[] data;
+        try {
+            data = read(filePath);
+        } catch (Exception e) {
+            return null;
+        }
         if (getCRC(data) == crc && crc > 0) {
             return data;
         }
         return null;
     }
 
-    public static boolean write(byte[] data, String filePath) {
+    public static boolean write(byte[] data, String filePath) throws Exception {
         FileOutputStream os = null;
         File f = new File(filePath);
         if (!f.getParentFile().exists() && !f.getParentFile().mkdirs()) {
@@ -104,8 +103,6 @@ public class IOUtils {
             os.write(data);
             os.flush();
             return true;
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
         } finally {
             if (os != null) {
                 try {
@@ -114,7 +111,6 @@ public class IOUtils {
                 }
             }
         }
-        return false;
     }
 
     public static long getCRC(byte[] data) {
@@ -129,18 +125,17 @@ public class IOUtils {
 
     public static void delete(String filePath) {
         File f = new File(filePath);
-        if (f.isDirectory()) {
+        if (f.isDirectory() && f.listFiles() != null && f.listFiles().length > 0) {
             for (File sub : f.listFiles()) {
-                sub.delete();
+                if (sub.isDirectory()) {
+                    delete(sub.getAbsolutePath());
+                } else {
+                    sub.delete();
+                }
             }
-        }
-        if (f.exists()) {
+        } else {
             f.delete();
         }
-    }
-
-    public static Object getSizeStr(long cacheSize) {
-        return null;
     }
 
     public static long formatSize(String unit) {
