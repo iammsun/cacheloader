@@ -23,14 +23,6 @@ class BitmapCache implements ICache<Bitmap> {
                 }
                 return value.getByteCount() / IOUtils.UNIT;
             }
-
-            @Override
-            protected void entryRemoved(boolean evicted, String key, Bitmap oldValue, Bitmap
-                    newValue) {
-                if (oldValue != null) {
-                    oldValue.recycle();
-                }
-            }
         };
     }
 
@@ -70,11 +62,17 @@ class BitmapCache implements ICache<Bitmap> {
 
     @Override
     public synchronized void clear() {
+        for (String key : mMemoryCache.snapshot().keySet()) {
+            Bitmap bitmap = get(key);
+            if (bitmap != null) {
+                bitmap.recycle();
+            }
+        }
         mMemoryCache.evictAll();
     }
 
     @Override
     public synchronized long size() {
-        return mMemoryCache.hitCount();
+        return mMemoryCache.size();
     }
 }

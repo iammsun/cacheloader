@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.simon.lib.cacheloader.Callback;
 import com.simon.lib.cacheloader.DownLoadManager;
 import com.simon.lib.cacheloader.ImageLoader;
+import com.simon.lib.cacheloader.util.Utils;
 
 /**
  * Created by sunmeng on 16/5/27.
@@ -106,9 +107,12 @@ public class ImageListAdapter extends BaseAdapter {
             "http://img.my.csdn.net/uploads/201407/26/1406382765_7341.jpg"};
 
     private final Context mContext;
+    private final DownLoadManager.Configuration mConfiguration = new DownLoadManager
+            .Configuration().setFlags(DownLoadManager.FLAG_CACHE_AFTER_LOAD | DownLoadManager
+            .FLAG_LOAD_FROM_CACHE);
 
     public ImageListAdapter(Context context) {
-        DownLoadManager.init(context,null);
+        DownLoadManager.init(context, mConfiguration);
         mContext = context;
     }
 
@@ -129,14 +133,16 @@ public class ImageListAdapter extends BaseAdapter {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
+        int size = Utils.getScreen(mContext).widthPixels / 4;
         if (convertView == null) {
             convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, null);
+            convertView.setLayoutParams(new ViewGroup.LayoutParams(size, size));
         }
         final ImageView iconView = (ImageView) convertView.findViewById(R.id.icon);
         iconView.setImageResource(0);
         iconView.setTag(images[position]);
         DownLoadManager.getInstance().load(images[position], new ImageLoader.ImageLoaderOption()
-                .cornerRate(0.1f).width(100).height(100), new Callback<Bitmap>() {
+                .cornerRate(0.05f).width(size - 3).height(size - 3), new Callback<Bitmap>() {
             @Override
             public void onResult(Bitmap data) {
                 if (images[position].equals(iconView.getTag()))
@@ -146,13 +152,19 @@ public class ImageListAdapter extends BaseAdapter {
             @Override
             public void onError(Throwable e) {
                 if (images[position].equals(iconView.getTag()))
-                    iconView.setImageResource(android.R.drawable.btn_star);
+                    iconView.setImageResource(android.R.drawable.stat_notify_error);
                 Toast.makeText(mContext, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onCancel(int code) {
 
+            }
+
+            @Override
+            public void onStart() {
+                if (images[position].equals(iconView.getTag()))
+                    iconView.setImageResource(android.R.drawable.stat_sys_warning);
             }
         });
         return convertView;

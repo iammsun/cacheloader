@@ -10,6 +10,8 @@ public interface Callback<T> {
 
     int CANCEL_CODE_MANUAL = 2;
 
+    void onStart();
+
     void onResult(T data);
 
     void onError(Throwable e);

@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.os.Looper;
 
 import java.io.InterruptedIOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +68,7 @@ public class DownLoadManager {
 
     private final List<DownLoader> mLoaders = new ArrayList<>();
     private final Map<DownLoader, Future> mFutures = new HashMap<>();
-    private final Map<DownLoader, WeakReference<Callback>> mCallbacks = new HashMap<>();
+    private final Map<DownLoader, Callback> mCallbacks = new HashMap<>();
 
     private Handler mUIHandler;
     private ICache<byte[]> mCache;
@@ -106,101 +105,95 @@ public class DownLoadManager {
     }
 
     public void load(final String url, final Callback<byte[]> callback) {
-        mUIHandler.post(new Runnable() {
+        DownLoader downLoader = new DownLoader(url, mFlags) {
             @Override
-            public void run() {
-                DownLoader downLoader = new DownLoader(url, mFlags) {
-                    @Override
-                    void onLoadComplete(final byte[] data, final Throwable ex) {
-                        if (ex != null) {
-                            onError(ex, this);
-                        } else {
-                            onResult(data, this);
-                        }
-                    }
-                };
-                mLoaders.add(downLoader);
-                mCallbacks.put(downLoader, new WeakReference(callback));
-                next();
+            void onLoadComplete(final byte[] data, final Throwable ex) {
+                if (ex != null) {
+                    onError(ex, this);
+                } else {
+                    onResult(data, this);
+                }
             }
-        });
+        };
+        onNewRequest(downLoader, callback);
     }
 
 
     public void load(final String url, final ImageLoader.ImageLoaderOption option, final
     Callback<Bitmap> callback) {
+        DownLoader downLoader = new ImageLoader(url, mFlags, option) {
+            @Override
+            void onLoadComplete(Bitmap bitmap, final Throwable ex) {
+                if (ex != null) {
+                    onError(ex, this);
+                } else {
+                    onResult(bitmap, this);
+                }
+            }
+        };
+        onNewRequest(downLoader, callback);
+    }
+
+    private synchronized void onNewRequest(final DownLoader downLoader, final Callback callback) {
+        mLoaders.add(downLoader);
+        mCallbacks.put(downLoader, callback);
+        notifyStart(callback);
+        next();
+    }
+
+    private synchronized void onResult(final Object data, final DownLoader loader) {
+        if (mFutures.get(loader) == null) {
+            return;
+        }
+        notifyResult(mCallbacks.get(loader), data);
+        executeDone(loader);
+    }
+
+    private synchronized void onError(final Throwable ex, final DownLoader loader) {
+        if (mFutures.get(loader) != null && ex instanceof InterruptedIOException) {
+            return;
+        }
+        if (mFutures.get(loader) == null) {
+            return;
+        }
+        notifyError(mCallbacks.get(loader), ex);
+        executeDone(loader);
+    }
+
+    private void notifyStart(final Callback callback) {
         mUIHandler.post(new Runnable() {
             @Override
             public void run() {
-                DownLoader downLoader = new ImageLoader(url, mFlags, option) {
-                    @Override
-                    void onLoadComplete(Bitmap bitmap, final Throwable ex) {
-                        if (ex != null) {
-                            onError(ex, this);
-                        } else {
-                            onResult(bitmap, this);
-                        }
-                    }
-                };
-                mLoaders.add(downLoader);
-                mCallbacks.put(downLoader, new WeakReference(callback));
-                next();
+                if (callback != null) {
+                    callback.onStart();
+                }
             }
         });
     }
 
-    private void onResult(final byte[] data, final DownLoader loader) {
+    private void notifyResult(final Callback callback, final Object data) {
         mUIHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mFutures.get(loader) == null) {
-                    return;
+                if (callback != null) {
+                    callback.onResult(data);
                 }
-                WeakReference<Callback> callback = mCallbacks.get(loader);
-                if (callback != null && callback.get() != null) {
-                    callback.get().onResult(data);
-                }
-                executeDone(loader);
             }
         });
     }
 
-    private void onResult(final Bitmap bitmap, final DownLoader loader) {
+    private void notifyError(final Callback callback, final Throwable ex) {
         mUIHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mFutures.get(loader) == null) {
-                    return;
+                if (callback != null) {
+                    callback.onError(ex);
                 }
-                WeakReference<Callback> callback = mCallbacks.get(loader);
-                if (callback != null && callback.get() != null) {
-                    callback.get().onResult(bitmap);
-                }
-                executeDone(loader);
             }
         });
     }
 
-    private void onError(final Throwable ex, final DownLoader loader) {
-        mUIHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (mFutures.get(loader) != null && ex instanceof InterruptedIOException) {
-                    return;
-                }
-                if (mFutures.get(loader) == null) {
-                    return;
-                }
-                WeakReference<Callback> callback = mCallbacks.get(loader);
-                if (callback != null && callback.get() != null) {
-                    callback.get().onError(ex);
-                }
-                executeDone(loader);
-            }
-        });
-    }
-
-    private void next() {
+    private synchronized void next() {
         if (mLoaders.isEmpty()) {
             return;
         }
@@ -210,7 +203,7 @@ public class DownLoadManager {
         executeNext();
     }
 
-    private void executeNext() {
+    private synchronized void executeNext() {
         for (int index = mLoaders.size() - 1; index >= 0; index--) {
             DownLoader loader = mLoaders.get(index);
             if (mFutures.get(loader) != null) {
@@ -221,7 +214,7 @@ public class DownLoadManager {
         }
     }
 
-    private void executeDone(DownLoader loader) {
+    private synchronized void executeDone(DownLoader loader) {
         mLoaders.remove(loader);
         mCallbacks.remove(loader);
         Future f = mFutures.remove(loader);
@@ -231,7 +224,7 @@ public class DownLoadManager {
         next();
     }
 
-    private void cancelDirty() {
+    private synchronized void cancelDirty() {
         for (int index = 0; index < mLoaders.size(); index++) {
             DownLoader loader = mLoaders.get(index);
             if (mFutures.get(loader) == null) {

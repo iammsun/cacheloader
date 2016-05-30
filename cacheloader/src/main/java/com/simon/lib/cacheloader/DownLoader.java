@@ -43,6 +43,5 @@ class DownLoader implements Runnable {
     }
 
     void onLoadComplete(byte[] data, Throwable ex) {
-
     }
 }
