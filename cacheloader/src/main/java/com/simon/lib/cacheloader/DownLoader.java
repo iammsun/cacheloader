@@ -26,8 +26,8 @@ class DownLoader implements Runnable {
     public void run() {
         Throwable ex = null;
         byte[] data = null;
-        if (mDownLoadManager.isLoadCache(mFlags)) {
-            data = mDownLoadManager.getCache().get(mUrl);
+        if (mDownLoadManager.isLoadWithCache(mFlags)) {
+            data = mDownLoadManager.getDiskCache().get(mUrl);
         }
         if (data == null) {
             try {
@@ -35,8 +35,8 @@ class DownLoader implements Runnable {
             } catch (Exception e) {
                 ex = e;
             }
-            if (data != null && mDownLoadManager.isCache(mFlags)) {
-                mDownLoadManager.getCache().cache(mUrl, data);
+            if (data != null) {
+                mDownLoadManager.getDiskCache().cache(mUrl, data);
             }
         }
         onLoadComplete(data, ex);

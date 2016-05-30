@@ -108,8 +108,7 @@ public class ImageListAdapter extends BaseAdapter {
 
     private final Context mContext;
     private final DownLoadManager.Configuration mConfiguration = new DownLoadManager
-            .Configuration().setFlags(DownLoadManager.FLAG_CACHE_AFTER_LOAD | DownLoadManager
-            .FLAG_LOAD_FROM_CACHE);
+            .Configuration().setFlags(DownLoadManager.FLAG_LOAD_WITH_CACHE);
 
     public ImageListAdapter(Context context) {
         DownLoadManager.init(context, mConfiguration);

@@ -46,13 +46,13 @@ public class ImageLoader extends DownLoader {
     @Override
     public void run() {
         byte[] data = null;
-        if (mDownLoadManager.isLoadCache(mFlags)) {
+        if (mDownLoadManager.isLoadWithCache(mFlags)) {
             Bitmap bitmap = mDownLoadManager.getMemCache().get(getCacheKey());
             if (bitmap != null) {
                 onLoadComplete(bitmap, null);
                 return;
             }
-            data = mDownLoadManager.getCache().get(getCacheKey());
+            data = mDownLoadManager.getDiskCache().get(getCacheKey());
         }
         if (data == null) {
             super.run();
@@ -68,8 +68,8 @@ public class ImageLoader extends DownLoader {
             bitmap = BitmapUtils.decodeCroppedRoundBitmap(data, mOption.width, mOption.height,
                     mOption.cornerRate);
         }
-        if (bitmap != null && mDownLoadManager.isCache(mFlags)) {
-            mDownLoadManager.getCache().cache(getCacheKey(), BitmapUtils.decodeBytes(bitmap));
+        if (bitmap != null) {
+            mDownLoadManager.getDiskCache().cache(getCacheKey(), BitmapUtils.decodeBytes(bitmap));
             mDownLoadManager.getMemCache().cache(getCacheKey(), bitmap);
         }
         onLoadComplete(bitmap, ex);
