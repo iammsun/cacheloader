@@ -8,7 +8,7 @@ import com.simon.lib.cacheloader.util.IOUtils;
  * @author mengsun
  * @date 2016-5-26 21:48:57
  */
-class DownLoader implements Runnable {
+public class DownLoader implements Runnable {
 
     protected final DownLoadManager mDownLoadManager = DownLoadManager.getInstance();
     protected final String mUrl;
@@ -43,5 +43,9 @@ class DownLoader implements Runnable {
     }
 
     void onLoadComplete(byte[] data, Throwable ex) {
+    }
+
+    public void cancel() {
+        mDownLoadManager.cancel(this);
     }
 }

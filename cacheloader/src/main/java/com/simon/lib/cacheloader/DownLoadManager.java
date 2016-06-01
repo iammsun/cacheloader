@@ -61,11 +61,13 @@ public class DownLoadManager {
 
     public static final int FLAG_LOAD_WITH_CACHE = FLAG_LOAD_BASE;
 
-    private static final int POOL_SIZE = 10;
+    public static final int FLAG_LOAD_CANCELLABLE = FLAG_LOAD_BASE << 1;
+
+    private static final int POOL_SIZE = 4;
     private final ExecutorService mExecutorService;
 
-    private final List<DownLoader> mLoaders = new ArrayList<>();
-    private final List<DownLoader> mFastLoaders = new ArrayList<>();
+    private final List<DownLoader> mDescLoaders = new ArrayList<>();
+    private final List<DownLoader> mAscLoaders = new ArrayList<>();
     private final Map<DownLoader, Future> mFutures = new HashMap<>();
     private final Map<DownLoader, Callback> mCallbacks = new HashMap<>();
 
@@ -91,6 +93,10 @@ public class DownLoadManager {
         return (flags & FLAG_LOAD_WITH_CACHE) == FLAG_LOAD_WITH_CACHE;
     }
 
+    boolean isCancellable() {
+        return (mFlags & FLAG_LOAD_CANCELLABLE) == FLAG_LOAD_CANCELLABLE;
+    }
+
     public ICache<byte[]> getDiskCache() {
         return mDiskCache;
     }
@@ -99,7 +105,19 @@ public class DownLoadManager {
         return mMemCache;
     }
 
-    public void load(final String url, final Callback<byte[]> callback) {
+    public synchronized boolean cancel(DownLoader downLoader) {
+        if (!isCancellable()) {
+            return false;
+        }
+        Callback callback = mCallbacks.get(downLoader);
+        if (remove(downLoader)) {
+            onNext();
+        }
+        notifyCancelled(callback);
+        return true;
+    }
+
+    public DownLoader load(final String url, final Callback<byte[]> callback) {
         DownLoader downLoader = new DownLoader(url, mFlags) {
             @Override
             void onLoadComplete(final byte[] data, final Throwable ex) {
@@ -111,10 +129,10 @@ public class DownLoadManager {
             }
         };
         onNewRequest(downLoader, callback);
+        return downLoader;
     }
 
-
-    public void load(final String url, final ImageLoader.ImageLoaderOption option, final
+    public DownLoader load(final String url, final ImageLoader.ImageLoaderOption option, final
     Callback<Bitmap> callback) {
         DownLoader downLoader = new ImageLoader(url, mFlags, option) {
             @Override
@@ -127,17 +145,19 @@ public class DownLoadManager {
             }
         };
         onNewRequest(downLoader, callback);
+        return downLoader;
     }
 
     private synchronized void onNewRequest(final DownLoader downLoader, final Callback callback) {
-        if (isLoadWithCache(downLoader.mFlags) && mDiskCache.get(downLoader.mUrl) != null) {
-            mFastLoaders.add(downLoader);
+        if (isCancellable() || (isLoadWithCache(downLoader.mFlags) && mDiskCache.get(downLoader
+                .mUrl) != null)) {
+            mAscLoaders.add(downLoader);
         } else {
-            mLoaders.add(downLoader);
+            mDescLoaders.add(downLoader);
         }
         mCallbacks.put(downLoader, callback);
         notifyStart(callback);
-        next();
+        onNext();
     }
 
     private synchronized void onResult(final Object data, final DownLoader loader) {
@@ -145,7 +165,8 @@ public class DownLoadManager {
             return;
         }
         notifyResult(mCallbacks.get(loader), data);
-        executeDone(loader);
+        remove(loader);
+        onNext();
     }
 
     private synchronized void onError(final Throwable ex, final DownLoader loader) {
@@ -156,7 +177,19 @@ public class DownLoadManager {
             return;
         }
         notifyError(mCallbacks.get(loader), ex);
-        executeDone(loader);
+        remove(loader);
+        onNext();
+    }
+
+    private void notifyCancelled(final Callback callback) {
+        mUIHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (callback != null) {
+                    callback.onCancel(Callback.CANCEL_CODE_MANUAL);
+                }
+            }
+        });
     }
 
     private void notifyStart(final Callback callback) {
@@ -193,16 +226,16 @@ public class DownLoadManager {
     }
 
     private synchronized long getTasksSize() {
-        return mLoaders.size() + mFastLoaders.size();
+        return mDescLoaders.size() + mAscLoaders.size();
     }
 
     private synchronized void suspendLowPriorityTask() {
         if (mFutures.size() < POOL_SIZE || getTasksSize() <= mFutures.size()) {
             return;
         }
-        if (!mLoaders.isEmpty()) {
-            for (int index = 0; index < mLoaders.size(); index++) {
-                DownLoader loader = mLoaders.get(index);
+        if (!mDescLoaders.isEmpty()) {
+            for (int index = 0; index < mDescLoaders.size(); index++) {
+                DownLoader loader = mDescLoaders.get(index);
                 if (mFutures.get(loader) == null) {
                     continue;
                 }
@@ -210,8 +243,8 @@ public class DownLoadManager {
                 return;
             }
         } else {
-            for (int index = mFastLoaders.size() - 1; index >= 0; index--) {
-                DownLoader loader = mFastLoaders.get(index);
+            for (int index = mAscLoaders.size() - 1; index >= 0; index--) {
+                DownLoader loader = mAscLoaders.get(index);
                 if (mFutures.get(loader) == null) {
                     continue;
                 }
@@ -222,25 +255,25 @@ public class DownLoadManager {
 
     }
 
-    private synchronized void next() {
+    private synchronized void onNext() {
         if (getTasksSize() == 0) {
             return;
         }
         suspendLowPriorityTask();
-        executeNext();
+        startNext();
     }
 
-    private synchronized void executeNext() {
-        for (int index = 0; index < mFastLoaders.size(); index++) {
-            DownLoader loader = mFastLoaders.get(index);
+    private synchronized void startNext() {
+        for (int index = 0; index < mAscLoaders.size(); index++) {
+            DownLoader loader = mAscLoaders.get(index);
             if (mFutures.get(loader) != null) {
                 continue;
             }
             mFutures.put(loader, mExecutorService.submit(loader));
             return;
         }
-        for (int index = mLoaders.size() - 1; index >= 0; index--) {
-            DownLoader loader = mLoaders.get(index);
+        for (int index = mDescLoaders.size() - 1; index >= 0; index--) {
+            DownLoader loader = mDescLoaders.get(index);
             if (mFutures.get(loader) != null) {
                 continue;
             }
@@ -249,14 +282,15 @@ public class DownLoadManager {
         }
     }
 
-    private synchronized void executeDone(DownLoader loader) {
-        mFastLoaders.remove(loader);
-        mLoaders.remove(loader);
+    private synchronized boolean remove(DownLoader loader) {
+        mAscLoaders.remove(loader);
+        mDescLoaders.remove(loader);
         mCallbacks.remove(loader);
         Future f = mFutures.remove(loader);
         if (f != null) {
             f.cancel(true);
+            return true;
         }
-        next();
+        return false;
     }
 }

@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.simon.lib.cacheloader.Callback;
 import com.simon.lib.cacheloader.DownLoadManager;
+import com.simon.lib.cacheloader.DownLoader;
 import com.simon.lib.cacheloader.ImageLoader;
 import com.simon.lib.cacheloader.util.Utils;
 
@@ -108,7 +109,8 @@ public class ImageListAdapter extends BaseAdapter {
 
     private final Context mContext;
     private final DownLoadManager.Configuration mConfiguration = new DownLoadManager
-            .Configuration().setFlags(DownLoadManager.FLAG_LOAD_WITH_CACHE);
+            .Configuration().setFlags(DownLoadManager.FLAG_LOAD_WITH_CACHE | DownLoadManager
+            .FLAG_LOAD_CANCELLABLE);
 
     public ImageListAdapter(Context context) {
         DownLoadManager.init(context, mConfiguration);
@@ -134,14 +136,18 @@ public class ImageListAdapter extends BaseAdapter {
     public View getView(final int position, View convertView, ViewGroup parent) {
         int size = Utils.getScreen(mContext).widthPixels / 4;
         if (convertView == null) {
-            convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, null);
+            convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item, parent, false);
             convertView.setLayoutParams(new ViewGroup.LayoutParams(size, size));
+        } else {
+            ((DownLoader) convertView.getTag()).cancel();
         }
         final ImageView iconView = (ImageView) convertView.findViewById(R.id.icon);
         iconView.setImageResource(0);
         iconView.setTag(images[position]);
-        DownLoadManager.getInstance().load(images[position], new ImageLoader.ImageLoaderOption()
-                .cornerRate(0.05f).width(size - 3).height(size - 3), new Callback<Bitmap>() {
+        DownLoader loader = DownLoadManager.getInstance().load(images[position], new ImageLoader
+                .ImageLoaderOption()
+                .cornerRate(0.05f).width(size - 3).height(size - 3), new Callback<Bitmap>
+                () {
             @Override
             public void onResult(Bitmap data) {
                 if (images[position].equals(iconView.getTag()))
@@ -166,6 +172,7 @@ public class ImageListAdapter extends BaseAdapter {
                     iconView.setImageResource(android.R.drawable.stat_sys_warning);
             }
         });
+        convertView.setTag(loader);
         return convertView;
     }
 }
